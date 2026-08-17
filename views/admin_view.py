@@ -24,15 +24,15 @@ def render_trips_tracking():
         st.info("Aucun trajet enregistré pour le moment.")
         return
         
-    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Femme de ménage', 'Nb Étapes', 'Itinéraire'])
+    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Fille', 'Nb Étapes', 'Itinéraire'])
     # Convert 'Date' column to datetime where possible for filtering
     df['DateObj'] = pd.to_datetime(df['Date'], errors='coerce')
     
     col1, col2, col3 = st.columns(3)
     with col1:
         # Get unique users
-        users = ["Tous"] + list(df['Femme de ménage'].unique())
-        selected_user = st.selectbox("Filtrer par femme de ménage", users)
+        users = ["Tous"] + list(df['Fille'].unique())
+        selected_user = st.selectbox("Filtrer par fille", users)
     
     with col2:
         # Extract unique months (YYYY-MM)
@@ -45,14 +45,14 @@ def render_trips_tracking():
     # Apply filters
     filtered_df = df.copy()
     if selected_user != "Tous":
-        filtered_df = filtered_df[filtered_df['Femme de ménage'] == selected_user]
+        filtered_df = filtered_df[filtered_df['Fille'] == selected_user]
     if selected_month != "Tous":
         filtered_df = filtered_df[filtered_df['DateObj'].dt.strftime('%Y-%m') == selected_month]
     if selected_date:
         filtered_df = filtered_df[filtered_df['DateObj'].dt.date == selected_date]
         
     # Formatage de la date en français pour l'affichage
-    display_df = filtered_df[['Date', 'Total KM', 'Femme de ménage', 'Nb Étapes', 'Itinéraire']].copy()
+    display_df = filtered_df[['Date', 'Total KM', 'Fille', 'Nb Étapes', 'Itinéraire']].copy()
     months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
     
     def format_date_french(date_str):
