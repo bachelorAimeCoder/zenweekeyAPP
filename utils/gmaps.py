@@ -1,5 +1,4 @@
 import os
-import googlemaps
 from dotenv import load_dotenv
 
 load_dotenv()
