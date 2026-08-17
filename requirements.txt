@@ -1,0 +1,6 @@
+streamlit
+pandas
+bcrypt
+requests
+python-dotenv
+sqlalchemy
