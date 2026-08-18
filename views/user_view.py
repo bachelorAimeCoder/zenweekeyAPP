@@ -26,14 +26,10 @@ def render_user_dashboard():
         if str(d) not in recorded_dates:
             missing_days.append(f"{i:02d}/{today.month:02d}")
             
-    header_label = "Date du trajet"
-    help_text = "Sélectionnez la date pour enregistrer votre journée."
-    
     if missing_days:
-        header_label = "Date du trajet ⚠️"
-        help_text = "Certains jours n'ont pas été déclarés ! (" + ", ".join(missing_days) + ")"
+        st.error(f"⚠️ Certains jours n'ont pas été déclarés ! ({', '.join(missing_days)})")
 
-    date_trip = st.date_input(header_label, value=today, help=help_text)
+    date_trip = st.date_input("Date du trajet", value=today)
     date_str = str(date_trip)
     
     # Check if a trip already exists for the selected date
