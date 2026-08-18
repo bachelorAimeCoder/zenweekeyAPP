@@ -6,6 +6,32 @@ from datetime import datetime
 from utils import pdf_export
 
 def render_admin_dashboard():
+    # ==== ALERTES JOURS MANQUANTS ====
+    users = database.get_all_users()
+    today = datetime.today().date()
+    from datetime import date
+    
+    missing_alerts = []
+    for u in users:
+        if u['role'] == 'User':
+            recorded = database.get_recorded_dates(u['id'])
+            missing_for_u = []
+            for i in range(1, today.day):
+                d = date(today.year, today.month, i)
+                if str(d) not in recorded:
+                    missing_for_u.append(f"{i:02d}/{today.month:02d}")
+            if missing_for_u:
+                missing_alerts.append(f"**{u['username']}** : {', '.join(missing_for_u)}")
+                
+    if missing_alerts:
+        col_space, col_alert = st.columns([8, 2])
+        with col_alert:
+            with st.popover(f"🚨 {len(missing_alerts)} Alerte(s)"):
+                st.markdown("**Jours non déclarés ce mois-ci :**")
+                for alert in missing_alerts:
+                    st.markdown(alert)
+    # ==================================
+
     tabs = st.tabs(["Suivi des Trajets", "Gestion des Utilisateurs", "Gestion des Adresses"])
     
     with tabs[0]:
