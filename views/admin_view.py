@@ -76,6 +76,22 @@ def render_trips_tracking():
     mc1, mc2 = st.columns(2)
     mc1.metric(label="Total Kilomètres (Filtre Actuel)", value=f"{total_km:.2f} km")
     mc2.metric(label="Total Heures (Filtre Actuel)", value=f"{total_hours:.2f} h")
+    
+    st.markdown("---")
+    st.subheader("Exporter en PDF")
+    
+    date_filter_str = str(selected_date) if selected_date else "Tous"
+    try:
+        pdf_bytes = pdf_export.generate_pdf(display_df, total_km, total_hours, selected_user, selected_month, date_filter_str)
+        st.download_button(
+            label="Télécharger le rapport PDF",
+            data=pdf_bytes,
+            file_name=f"rapport_conciergerie_{datetime.today().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            type="primary"
+        )
+    except Exception as e:
+        st.error(f"Impossible de générer le PDF : {str(e)}")
 
 def render_user_management():
     st.header("Gestion des utilisateurs")
