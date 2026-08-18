@@ -13,6 +13,12 @@ st.markdown("""
             background-color: #D5B646;
             border-bottom: 2px solid #1F1F1F;
         }
+        /* Fond jaune clair pour toutes les cases de saisie (texte, date, select) */
+        div[data-baseweb="select"] > div,
+        div[data-baseweb="base-input"],
+        div[data-baseweb="input"] {
+            background-color: #fcf9e8 !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
