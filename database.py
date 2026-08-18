@@ -228,6 +228,11 @@ def get_trip_by_user_and_date(user_id, date):
     with get_db_connection() as conn:
         return conn.execute("SELECT * FROM trips WHERE user_id = ? AND date = ?", (user_id, date)).fetchone()
 
+def get_recorded_dates(user_id):
+    with get_db_connection() as conn:
+        rows = conn.execute("SELECT date FROM trips WHERE user_id = ?", (user_id,)).fetchall()
+        return [r['date'] for r in rows]
+
 def delete_trip(trip_id):
     with get_db_connection() as conn:
         conn.execute("DELETE FROM trip_steps WHERE trip_id = ?", (trip_id,))

@@ -15,7 +15,25 @@ def render_user_dashboard():
     addr_options = [f"{a['reference']} - {a['address']} ({a['city']})" for a in addresses]
     addr_mapping = {f"{a['reference']} - {a['address']} ({a['city']})": a for a in addresses}
 
-    date_trip = st.date_input("Date du trajet", value=datetime.today())
+    # Calcul des jours manquants pour le mois en cours (jusqu'à la veille)
+    today = datetime.today().date()
+    recorded_dates = database.get_recorded_dates(st.session_state.user['id'])
+    
+    missing_days = []
+    from datetime import timedelta, date
+    for i in range(1, today.day):
+        d = date(today.year, today.month, i)
+        if str(d) not in recorded_dates:
+            missing_days.append(f"{i:02d}/{today.month:02d}")
+            
+    header_label = "Date du trajet"
+    help_text = "Sélectionnez la date pour enregistrer votre journée."
+    
+    if missing_days:
+        header_label = "Date du trajet ⚠️"
+        help_text = "Certains jours n'ont pas été déclarés ! (" + ", ".join(missing_days) + ")"
+
+    date_trip = st.date_input(header_label, value=today, help=help_text)
     date_str = str(date_trip)
     
     # Check if a trip already exists for the selected date
