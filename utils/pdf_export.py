@@ -90,7 +90,7 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
     
     # Title
     pdf.set_font("helvetica", "B", 14)
-    pdf.cell(0, 10, f"Fiche Comptable - {sanitize(month_str)}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 10, f"Fiche Comptable - {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
     
     # Information
@@ -105,17 +105,30 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
     except:
         periode_str = month_str
 
+    # Counts
+    # Assuming standard statuts: "Congés payés", "Maladie", "Absence injustifiée"
+    cp_count = len(df[df['Statut'] == "Congés payés"]) if 'Statut' in df.columns else 0
+    mal_count = len(df[df['Statut'] == "Maladie"]) if 'Statut' in df.columns else 0
+    abs_count = len(df[df['Statut'] == "Absence injustifiée"]) if 'Statut' in df.columns else 0
+
     pdf.set_font("helvetica", "B", 11)
     pdf.cell(0, 6, f"Salariee : {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Periode : {periode_str}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Total des heures : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Nombre de kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    
+    # Recapitulatif congés/absences
+    pdf.set_font("helvetica", "", 11)
+    pdf.cell(0, 6, f"Jours en conges payes : {cp_count}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Jours d'absences (maladie) : {mal_count}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Jours d'absences injustifiees : {abs_count}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
     
-    # Table Header
+    # Table Header (Dates -> Description -> Heures -> Kilometres)
     pdf.set_font("helvetica", "B", 10)
-    col_widths = [45, 30, 65, 40]
-    headers = ["Date", "Kilometres", "Statut", "Heures"]
+    col_widths = [40, 75, 35, 30]
+    headers = ["Dates", "Description", "Heures", "Kilometres"]
     
     for i, h in enumerate(headers):
         pdf.cell(col_widths[i], 8, h, border=1, align="C")
@@ -131,9 +144,9 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
         
     for _, row in df.iterrows():
         pdf.cell(col_widths[0], 8, sanitize(format_date_french(row.get('Date', ''))), border=1, align="C")
-        pdf.cell(col_widths[1], 8, f"{row.get('Total KM', 0):.2f}", border=1, align="R")
-        pdf.cell(col_widths[2], 8, sanitize(row.get('Statut', '')), border=1, align="C")
-        pdf.cell(col_widths[3], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
+        pdf.cell(col_widths[1], 8, sanitize(row.get('Statut', '')), border=1, align="C")
+        pdf.cell(col_widths[2], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
+        pdf.cell(col_widths[3], 8, f"{row.get('Total KM', 0):.2f}", border=1, align="R")
         pdf.ln(8)
         
     return bytes(pdf.output())
