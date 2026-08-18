@@ -32,53 +32,75 @@ def render_user_dashboard():
             st.rerun()
         return
 
-    # Initialize steps in session state
-    if "trip_steps" not in st.session_state:
-        st.session_state.trip_steps = 1
-    
-    steps = []
-    
-    st.subheader("Itinéraire")
-    for i in range(st.session_state.trip_steps):
-        label = "Départ" if i == 0 else f"Étape {i}"
-        step_selection = st.selectbox(
-            label, 
-            addr_options, 
-            key=f"step_{i}", 
-            index=None, 
-            placeholder="Sélectionnez une adresse..."
-        )
-        steps.append(step_selection)
+    # Statut de la journée
+    status_options = [
+        "Travail", 
+        "Repos", 
+        "Congé payé", 
+        "Maladie avec justificatif", 
+        "Absence sans justificatif"
+    ]
+    day_status = st.selectbox("Statut de la journée", status_options)
+
+    if day_status == "Travail":
+        hours_worked = st.number_input("Nombre d'heures travaillées", min_value=0.0, max_value=24.0, step=0.5, value=0.0)
         
-    if st.button("Ajouter une étape"):
-        st.session_state.trip_steps += 1
-        st.rerun()
+        # Initialize steps in session state
+        if "trip_steps" not in st.session_state:
+            st.session_state.trip_steps = 1
         
-    st.markdown("---")
-    if st.button("Enregistrer l'itinéraire", type="primary"):
-        if None in steps:
-            st.warning("Erreur : Certaines étapes sont vides. Veuillez sélectionner une adresse pour chaque étape.")
-        elif len(steps) < 2:
-            st.warning("Veuillez saisir au moins un point de départ et une destination.")
-        else:
-            with st.spinner("Calcul des distances..."):
-                # Préparer la liste des adresses textuelles pour Google Maps
-                full_addresses = [f"{addr_mapping[s]['address']}, {addr_mapping[s]['city']}, France" for s in steps]
-                
-                try:
-                    total_km = gmaps.calculate_total_trip_distance(full_addresses)
+        steps = []
+        
+        st.subheader("Itinéraire")
+        for i in range(st.session_state.trip_steps):
+            label = "Départ" if i == 0 else f"Étape {i}"
+            step_selection = st.selectbox(
+                label, 
+                addr_options, 
+                key=f"step_{i}", 
+                index=None, 
+                placeholder="Sélectionnez une adresse..."
+            )
+            steps.append(step_selection)
+            
+        if st.button("Ajouter une étape"):
+            st.session_state.trip_steps += 1
+            st.rerun()
+            
+        st.markdown("---")
+        if st.button("Enregistrer la journée", type="primary"):
+            if None in steps:
+                st.warning("Erreur : Certaines étapes sont vides. Veuillez sélectionner une adresse pour chaque étape.")
+            elif len(steps) < 2:
+                st.warning("Veuillez saisir au moins un point de départ et une destination.")
+            else:
+                with st.spinner("Calcul des distances..."):
+                    # Préparer la liste des adresses textuelles pour Google Maps
+                    full_addresses = [f"{addr_mapping[s]['address']}, {addr_mapping[s]['city']}, France" for s in steps]
                     
-                    # Sauvegarder en BDD
-                    step_ids = [addr_mapping[s]['id'] for s in steps]
-                    database.save_trip(st.session_state.user['id'], date_str, total_km, step_ids)
-                    
-                    st.success(f"Trajet enregistré avec succès ! Kilométrage total calculé : {total_km:.2f} km")
-                    
-                    # Reset
-                    st.session_state.trip_steps = 1
-                    import time
-                    time.sleep(2)
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Impossible de calculer le kilométrage complet.")
-                    st.error(f"Détails de l'erreur : {str(e)}")
+                    try:
+                        total_km = gmaps.calculate_total_trip_distance(full_addresses)
+                        
+                        # Sauvegarder en BDD
+                        step_ids = [addr_mapping[s]['id'] for s in steps]
+                        database.save_trip(st.session_state.user['id'], date_str, total_km, step_ids, status=day_status, hours=hours_worked)
+                        
+                        st.success(f"Journée enregistrée avec succès ! Kilométrage total calculé : {total_km:.2f} km")
+                        
+                        # Reset
+                        st.session_state.trip_steps = 1
+                        import time
+                        time.sleep(2)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Impossible de calculer le kilométrage complet.")
+                        st.error(f"Détails de l'erreur : {str(e)}")
+    else:
+        # Non-working day
+        st.info(f"Vous avez sélectionné une journée de type : **{day_status}**.")
+        if st.button("Enregistrer la journée", type="primary"):
+            database.save_trip(st.session_state.user['id'], date_str, 0.0, [], status=day_status, hours=0.0)
+            st.success(f"Journée de {day_status} enregistrée avec succès.")
+            import time
+            time.sleep(2)
+            st.rerun()

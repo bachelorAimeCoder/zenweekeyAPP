@@ -24,7 +24,7 @@ def render_trips_tracking():
         st.info("Aucun trajet enregistré pour le moment.")
         return
         
-    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Fille', 'Nb Étapes', 'Itinéraire'])
+    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Fille', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures'])
     # Convert 'Date' column to datetime where possible for filtering
     df['DateObj'] = pd.to_datetime(df['Date'], errors='coerce')
     
@@ -52,7 +52,7 @@ def render_trips_tracking():
         filtered_df = filtered_df[filtered_df['DateObj'].dt.date == selected_date]
         
     # Formatage de la date en français pour l'affichage
-    display_df = filtered_df[['Date', 'Total KM', 'Fille', 'Nb Étapes', 'Itinéraire']].copy()
+    display_df = filtered_df[['Date', 'Total KM', 'Fille', 'Statut', 'Heures', 'Nb Étapes', 'Itinéraire']].copy()
     months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
     
     def format_date_french(date_str):
@@ -71,7 +71,11 @@ def render_trips_tracking():
     )
     
     total_km = filtered_df['Total KM'].sum()
-    st.metric(label="Total Kilomètres (Filtre Actuel)", value=f"{total_km:.2f} km")
+    total_hours = filtered_df['Heures'].sum()
+    
+    mc1, mc2 = st.columns(2)
+    mc1.metric(label="Total Kilomètres (Filtre Actuel)", value=f"{total_km:.2f} km")
+    mc2.metric(label="Total Heures (Filtre Actuel)", value=f"{total_hours:.2f} h")
 
 def render_user_management():
     st.header("Gestion des utilisateurs")

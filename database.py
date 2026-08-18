@@ -44,9 +44,20 @@ def init_db():
                 user_id INTEGER NOT NULL,
                 date TEXT NOT NULL,
                 total_km REAL DEFAULT 0.0,
+                status TEXT DEFAULT 'Travail',
+                hours REAL DEFAULT 0.0,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        try:
+            cursor.execute("ALTER TABLE trips ADD COLUMN status TEXT DEFAULT 'Travail'")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE trips ADD COLUMN hours REAL DEFAULT 0.0")
+        except:
+            pass
 
         # Table Trip Steps
         cursor.execute('''
@@ -182,11 +193,11 @@ def delete_address(address_id):
         conn.commit()
 
 # --- Fonctions Trajets ---
-def save_trip(user_id, date, total_km, steps):
+def save_trip(user_id, date, total_km, steps, status='Travail', hours=0.0):
     """steps est une liste d'IDs d'adresses dans l'ordre d'apparition"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO trips (user_id, date, total_km) VALUES (?, ?, ?)", (user_id, date, total_km))
+        cursor.execute("INSERT INTO trips (user_id, date, total_km, status, hours) VALUES (?, ?, ?, ?, ?)", (user_id, date, total_km, status, hours))
         trip_id = cursor.lastrowid
         
         step_records = [(trip_id, order, address_id) for order, address_id in enumerate(steps)]
@@ -205,7 +216,9 @@ def get_all_trips():
                        JOIN addresses a ON ts.address_id = a.id 
                        WHERE ts.trip_id = t.id 
                        ORDER BY ts.step_order
-                   ) as route_details
+                   ) as route_details,
+                   t.status,
+                   t.hours
             FROM trips t 
             JOIN users u ON t.user_id = u.id
             ORDER BY t.date DESC
