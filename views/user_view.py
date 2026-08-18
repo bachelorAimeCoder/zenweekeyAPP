@@ -57,7 +57,19 @@ def render_user_dashboard():
     day_status = st.selectbox("Statut de la journée", status_options)
 
     if day_status == "Travail":
-        hours_worked = st.number_input("Nombre d'heures travaillées", min_value=0.0, max_value=24.0, step=0.5, value=0.0)
+        def format_hours_str(val):
+            h = int(val)
+            m = int(round((val - h) * 60))
+            if m == 0: return f"{h}h"
+            return f"{h}h{m:02d}"
+            
+        hours_options = [i / 2.0 for i in range(0, 49)]
+        hours_worked = st.selectbox(
+            "Nombre d'heures travaillées", 
+            options=hours_options, 
+            format_func=format_hours_str, 
+            index=0
+        )
         st.markdown("<p style='color: #e06666; font-size: 0.85em; margin-top: -10px; margin-bottom: 20px;'><i>* Pour rappel, une pause de 20 minutes est obligatoire pour six heures de travail consécutives.</i></p>", unsafe_allow_html=True)
         
         # Initialize steps in session state

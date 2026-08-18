@@ -89,10 +89,19 @@ def render_trips_tracking():
         except:
             return date_str
             
-    display_df['Date'] = display_df['Date'].apply(format_date_french)
+    def format_hours_str(val):
+        if pd.isna(val) or val is None: return "0h"
+        h = int(val)
+        m = int(round((val - h) * 60))
+        if m == 0: return f"{h}h"
+        return f"{h}h{m:02d}"
+            
+    ui_df = display_df.copy()
+    ui_df['Date'] = ui_df['Date'].apply(format_date_french)
+    ui_df['Heures'] = ui_df['Heures'].apply(format_hours_str)
 
     st.dataframe(
-        display_df, 
+        ui_df, 
         width='stretch', 
         hide_index=True
     )
@@ -102,7 +111,7 @@ def render_trips_tracking():
     
     mc1, mc2 = st.columns(2)
     mc1.metric(label="Total Kilomètres (Filtre Actuel)", value=f"{total_km:.2f} km")
-    mc2.metric(label="Total Heures (Filtre Actuel)", value=f"{total_hours:.2f} h")
+    mc2.metric(label="Total Heures (Filtre Actuel)", value=format_hours_str(total_hours))
     
     st.markdown("---")
     st.subheader("Exporter en PDF")
