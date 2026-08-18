@@ -106,10 +106,9 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
         periode_str = month_str
 
     # Counts
-    # Assuming standard statuts: "Congés payés", "Maladie", "Absence injustifiée"
-    cp_count = len(df[df['Statut'] == "Congés payés"]) if 'Statut' in df.columns else 0
-    mal_count = len(df[df['Statut'] == "Maladie"]) if 'Statut' in df.columns else 0
-    abs_count = len(df[df['Statut'] == "Absence injustifiée"]) if 'Statut' in df.columns else 0
+    cp_count = len(df[df['Statut'] == "Congé payé"]) if 'Statut' in df.columns else 0
+    mal_count = len(df[df['Statut'] == "Maladie avec justificatif"]) if 'Statut' in df.columns else 0
+    abs_count = len(df[df['Statut'] == "Absence sans justificatif"]) if 'Statut' in df.columns else 0
 
     pdf.set_font("helvetica", "B", 11)
     pdf.cell(0, 6, f"Salariee : {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT")
