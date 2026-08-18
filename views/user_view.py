@@ -58,6 +58,7 @@ def render_user_dashboard():
 
     if day_status == "Travail":
         hours_worked = st.number_input("Nombre d'heures travaillées", min_value=0.0, max_value=24.0, step=0.5, value=0.0)
+        st.markdown("<p style='color: #e06666; font-size: 0.85em; margin-top: -10px; margin-bottom: 20px;'><i>* Pour rappel, une pause de 20 minutes est obligatoire pour six heures de travail consécutives.</i></p>", unsafe_allow_html=True)
         
         # Initialize steps in session state
         if "trip_steps" not in st.session_state:
