@@ -36,8 +36,18 @@ def render_user_dashboard():
     existing_trip = database.get_trip_by_user_and_date(st.session_state.user['id'], date_str)
     
     if existing_trip:
-        st.success(f"Vous avez déjà enregistré un trajet pour cette date ({existing_trip['total_km']} km).")
-        st.info("Vous ne pouvez enregistrer qu'une seule série de trajets par jour.")
+        # Check status for non-work days
+        try:
+            statut = existing_trip['status']
+        except:
+            statut = "Travail"
+            
+        if statut == "Travail":
+            st.success(f"Vous avez déjà enregistré une journée de travail pour cette date ({existing_trip['total_km']:.1f} km).")
+        else:
+            st.success(f"Vous avez déjà déclaré cette date comme étant : **{statut}**.")
+            
+        st.info("Vous ne pouvez enregistrer qu'une seule activité par jour.")
         if st.button("Effacer le trajet de ce jour", type="primary"):
             database.delete_trip(existing_trip['id'])
             st.warning("Le trajet a été supprimé.")
