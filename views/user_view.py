@@ -15,17 +15,16 @@ def render_user_dashboard():
     addr_options = [f"{a['reference']} - {a['address']} ({a['city']})" for a in addresses]
     addr_mapping = {f"{a['reference']} - {a['address']} ({a['city']})": a for a in addresses}
 
-    date_trip = datetime.today().date()
-    st.write(f"**Date du jour :** {date_trip.strftime('%A %d %B %Y')}") # Fixed date for today
+    date_trip = st.date_input("Date du trajet", value=datetime.today())
     date_str = str(date_trip)
     
-    # Check if a trip already exists for today
+    # Check if a trip already exists for the selected date
     existing_trip = database.get_trip_by_user_and_date(st.session_state.user['id'], date_str)
     
     if existing_trip:
-        st.success(f"Vous avez déjà enregistré un trajet pour aujourd'hui ({existing_trip['total_km']} km).")
+        st.success(f"Vous avez déjà enregistré un trajet pour cette date ({existing_trip['total_km']} km).")
         st.info("Vous ne pouvez enregistrer qu'une seule série de trajets par jour.")
-        if st.button("Effacer le trajet d'aujourd'hui", type="primary"):
+        if st.button("Effacer le trajet de ce jour", type="primary"):
             database.delete_trip(existing_trip['id'])
             st.warning("Le trajet a été supprimé.")
             import time
