@@ -187,7 +187,9 @@ def render_user_management():
     users = database.get_all_users()
     for user in users:
         col1, col2, col3 = st.columns([3, 1, 1])
-        full_name = f"{user['username']} {user.get('last_name', '')}".strip()
+        # sqlite3.Row doesn't have .get(), so we check keys or access directly since last_name is in SELECT
+        ln = user['last_name'] if user['last_name'] else ''
+        full_name = f"{user['username']} {ln}".strip()
         col1.write(f"**{full_name}** ({user['role']})")
         if user['username'] != st.session_state.user['username']: # Ne pas se supprimer soi-même
             if col2.button("Supprimer", key=f"del_user_{user['id']}"):
