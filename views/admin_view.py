@@ -3,6 +3,7 @@ import pandas as pd
 import database
 import auth
 from datetime import datetime
+from utils import pdf_export
 
 def render_admin_dashboard():
     tabs = st.tabs(["Suivi des Trajets", "Gestion des Utilisateurs", "Gestion des Adresses"])
