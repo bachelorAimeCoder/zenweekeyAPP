@@ -73,7 +73,7 @@ def render_user_dashboard():
             if m == 0: return f"{h}h"
             return f"{h}h{m:02d}"
             
-        hours_options = [i / 6.0 for i in range(0, 24 * 6 + 1)]
+        hours_options = [i / 12.0 for i in range(0, 24 * 12 + 1)]
         hours_worked = st.selectbox(
             "Nombre d'heures travaillées", 
             options=hours_options, 
