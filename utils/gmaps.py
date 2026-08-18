@@ -1,8 +1,16 @@
 import os
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
-API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+
+def get_api_key():
+    try:
+        return st.secrets["GOOGLE_MAPS_API_KEY"]
+    except:
+        return os.getenv("GOOGLE_MAPS_API_KEY")
+
+API_KEY = get_api_key()
 
 import requests
 
@@ -13,7 +21,7 @@ def get_distance_between_addresses(origin_str, destination_str):
     Retourne la distance en kilomètres.
     """
     if not API_KEY:
-        return 0.0
+        raise Exception("Clé API introuvable. Veuillez configurer GOOGLE_MAPS_API_KEY.")
 
     url = "https://routes.googleapis.com/directions/v2:computeRoutes"
     
