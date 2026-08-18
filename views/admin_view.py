@@ -104,9 +104,19 @@ def render_trips_tracking():
         if m == 0: return f"{h}h"
         return f"{h}h{m:02d}"
             
+    # Application du Decimal Rounding Half-Up exact
+    def format_km(val):
+        from decimal import Decimal, ROUND_HALF_UP
+        if pd.isna(val) or val is None: return "0.0"
+        try:
+            return f"{Decimal(str(val)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP):.1f}"
+        except:
+            return f"{val:.1f}"
+
     ui_df = display_df.copy()
     ui_df['Date'] = ui_df['Date'].apply(format_date_french)
     ui_df['Heures'] = ui_df['Heures'].apply(format_hours_str)
+    ui_df['Total KM'] = ui_df['Total KM'].apply(format_km)
 
     st.dataframe(
         ui_df, 
@@ -118,7 +128,7 @@ def render_trips_tracking():
     total_hours = filtered_df['Heures'].sum()
     
     mc1, mc2 = st.columns(2)
-    mc1.metric(label="Total Kilomètres (Filtre Actuel)", value=f"{total_km:.2f} km")
+    mc1.metric(label="Total Kilomètres (Filtre Actuel)", value=f"{format_km(total_km)} km")
     mc2.metric(label="Total Heures (Filtre Actuel)", value=format_hours_str(total_hours))
     
     st.markdown("---")

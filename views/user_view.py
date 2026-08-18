@@ -106,13 +106,19 @@ def render_user_dashboard():
                     full_addresses = [f"{addr_mapping[s]['address']}, {addr_mapping[s]['city']}, France" for s in steps]
                     
                     try:
-                        total_km = gmaps.calculate_total_trip_distance(full_addresses)
+                        total_km_raw = gmaps.calculate_total_trip_distance(full_addresses)
+                        
+                        from decimal import Decimal, ROUND_HALF_UP
+                        try:
+                            total_km = float(Decimal(str(total_km_raw)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP))
+                        except:
+                            total_km = float(total_km_raw)
                         
                         # Sauvegarder en BDD
                         step_ids = [addr_mapping[s]['id'] for s in steps]
                         database.save_trip(st.session_state.user['id'], date_str, total_km, step_ids, status=day_status, hours=hours_worked)
                         
-                        st.success(f"Journée enregistrée avec succès ! Kilométrage total calculé : {total_km:.2f} km")
+                        st.success(f"Journée enregistrée avec succès ! Kilométrage total calculé : {total_km:.1f} km")
                         
                         # Reset
                         st.session_state.trip_steps = 1

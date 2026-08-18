@@ -19,6 +19,14 @@ def format_hours_str(val):
     except:
         return str(val)
 
+def format_km(val):
+    from decimal import Decimal, ROUND_HALF_UP
+    try:
+        if val is None or val == "": return "0.0"
+        return f"{Decimal(str(val)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP):.1f}"
+    except:
+        return f"{val:.1f}"
+
 def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filter):
     pdf = FPDF(orientation="L")
     pdf.add_page()
@@ -36,7 +44,7 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
     pdf.ln(2)
     
     pdf.set_font("helvetica", "B", 11)
-    pdf.cell(0, 6, f"Total Kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Total Kilometres : {format_km(total_km)} km", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Total Heures travail : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
     
@@ -57,7 +65,7 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
             route = route[:92] + "..."
             
         pdf.cell(col_widths[0], 8, sanitize(row.get('Date', '')), border=1)
-        pdf.cell(col_widths[1], 8, f"{row.get('Total KM', 0):.2f}", border=1, align="R")
+        pdf.cell(col_widths[1], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
         pdf.cell(col_widths[2], 8, sanitize(row.get('Fille', ''))[:15], border=1)
         pdf.cell(col_widths[3], 8, sanitize(row.get('Statut', ''))[:15], border=1)
         pdf.cell(col_widths[4], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
@@ -114,7 +122,7 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
     pdf.cell(0, 6, f"Salariee : {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Periode : {periode_str}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Total des heures : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Nombre de kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Nombre de kilometres : {format_km(total_km)} km", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     
     # Recapitulatif congés/absences
@@ -145,7 +153,7 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
         pdf.cell(col_widths[0], 8, sanitize(format_date_french(row.get('Date', ''))), border=1, align="C")
         pdf.cell(col_widths[1], 8, sanitize(row.get('Statut', '')), border=1, align="C")
         pdf.cell(col_widths[2], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
-        pdf.cell(col_widths[3], 8, f"{row.get('Total KM', 0):.2f}", border=1, align="R")
+        pdf.cell(col_widths[3], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
         pdf.ln(8)
         
     return bytes(pdf.output())
