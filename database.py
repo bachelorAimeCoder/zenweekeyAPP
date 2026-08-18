@@ -59,6 +59,11 @@ def init_db():
         except:
             pass
 
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN last_name TEXT DEFAULT ''")
+        except:
+            pass
+
         # Table Trip Steps
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS trip_steps (
@@ -151,12 +156,12 @@ def get_user_by_username(username):
 
 def get_all_users():
     with get_db_connection() as conn:
-        return conn.execute("SELECT id, username, role FROM users").fetchall()
+        return conn.execute("SELECT id, username, role, last_name FROM users").fetchall()
 
-def create_user(username, password_hash, role):
+def create_user(username, password_hash, role, last_name=""):
     try:
         with get_db_connection() as conn:
-            conn.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", (username, password_hash, role))
+            conn.execute("INSERT INTO users (username, password_hash, role, last_name) VALUES (?, ?, ?, ?)", (username, password_hash, role, last_name))
             conn.commit()
             return True
     except sqlite3.IntegrityError:
@@ -208,7 +213,7 @@ def save_trip(user_id, date, total_km, steps, status='Travail', hours=0.0):
 def get_all_trips():
     with get_db_connection() as conn:
         return conn.execute('''
-            SELECT t.id, t.date, t.total_km, u.username, 
+            SELECT t.id, t.date, t.total_km, u.username, u.last_name,
                    (SELECT COUNT(*) FROM trip_steps ts WHERE ts.trip_id = t.id) as step_count,
                    (
                        SELECT GROUP_CONCAT(a.reference, ' ➔ ') 

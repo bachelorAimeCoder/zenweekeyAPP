@@ -51,7 +51,10 @@ def render_trips_tracking():
         st.info("Aucun trajet enregistré pour le moment.")
         return
         
-    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Fille', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures'])
+    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Fille', 'Nom', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures'])
+    df['Nom_Famille'] = df['Nom'].fillna('')
+    df['Fille_Complet'] = df.apply(lambda r: f"{r['Fille']} {r['Nom_Famille']}".strip(), axis=1)
+    
     # Convert 'Date' column to datetime where possible for filtering
     df['DateObj'] = pd.to_datetime(df['Date'], errors='coerce')
     
@@ -78,6 +81,7 @@ def render_trips_tracking():
         
     # Capture accounting dataframe isolated from specific date/user filters
     accounting_df = filtered_df.copy()
+    accounting_df['Fille'] = accounting_df['Fille_Complet']
     
     if selected_date:
         filtered_df = filtered_df[filtered_df['DateObj'].dt.date == selected_date]
@@ -161,7 +165,8 @@ def render_user_management():
     # Création d'utilisateur
     with st.expander("Créer un nouvel utilisateur"):
         with st.form("new_user_form"):
-            new_username = st.text_input("Nom d'utilisateur")
+            new_username = st.text_input("Nom d'utilisateur (Prénom)")
+            new_last_name = st.text_input("Nom de famille", help="Utile pour la fiche comptable")
             new_password = st.text_input("Mot de passe", type="password")
             new_role = st.selectbox("Rôle", ["User", "Admin"])
             submit_user = st.form_submit_button("Créer", type="primary")
@@ -169,20 +174,21 @@ def render_user_management():
             if submit_user:
                 if new_username and new_password:
                     hashed_pw = auth.hash_password(new_password)
-                    if database.create_user(new_username, hashed_pw, new_role):
+                    if database.create_user(new_username, hashed_pw, new_role, new_last_name):
                         st.success(f"Utilisateur {new_username} créé avec succès !")
                         st.rerun()
                     else:
                         st.error("Ce nom d'utilisateur existe déjà.")
                 else:
-                    st.warning("Veuillez remplir tous les champs.")
-
+                    st.warning("Veuillez remplir tous les champs obligatoires.")
+                    
     # Liste et suppression des utilisateurs
     st.subheader("Liste des utilisateurs")
     users = database.get_all_users()
     for user in users:
         col1, col2, col3 = st.columns([3, 1, 1])
-        col1.write(f"**{user['username']}** ({user['role']})")
+        full_name = f"{user['username']} {user.get('last_name', '')}".strip()
+        col1.write(f"**{full_name}** ({user['role']})")
         if user['username'] != st.session_state.user['username']: # Ne pas se supprimer soi-même
             if col2.button("Supprimer", key=f"del_user_{user['id']}"):
                 database.delete_user(user['id'])
