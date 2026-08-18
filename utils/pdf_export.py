@@ -6,6 +6,17 @@ def sanitize(text):
     # Retire les emojis et les symboles non supportes par Helvetica pour eviter les erreurs de generation PDF
     return text.replace('➔', '->').replace('é', 'e').replace('è','e').replace('à','a').replace('â','a').replace('ô','o').replace('ê','e')
 
+def format_hours_str(val):
+    try:
+        if val is None or val == "": return "0h"
+        val = float(val)
+        h = int(val)
+        m = int(round((val - h) * 60))
+        if m == 0: return f"{h}h"
+        return f"{h}h{m:02d}"
+    except:
+        return str(val)
+
 def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filter):
     pdf = FPDF(orientation="L")
     pdf.add_page()
@@ -24,7 +35,7 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
     
     pdf.set_font("helvetica", "B", 11)
     pdf.cell(0, 6, f"Total Kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Total Heures travail : {total_hours:.2f} h", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Total Heures travail : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
     
     # Table Header
@@ -47,7 +58,7 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
         pdf.cell(col_widths[1], 8, f"{row.get('Total KM', 0):.2f}", border=1, align="R")
         pdf.cell(col_widths[2], 8, sanitize(row.get('Fille', ''))[:15], border=1)
         pdf.cell(col_widths[3], 8, sanitize(row.get('Statut', ''))[:15], border=1)
-        pdf.cell(col_widths[4], 8, f"{row.get('Heures', 0):.2f}", border=1, align="R")
+        pdf.cell(col_widths[4], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
         pdf.cell(col_widths[5], 8, str(row.get('Nb Étapes', 0)), border=1, align="C")
         pdf.cell(col_widths[6], 8, route, border=1)
         pdf.ln(8)
