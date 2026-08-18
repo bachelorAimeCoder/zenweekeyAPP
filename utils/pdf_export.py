@@ -1,3 +1,5 @@
+import io
+import zipfile
 from fpdf import FPDF
 
 def sanitize(text):
@@ -64,3 +66,80 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
         pdf.ln(8)
         
     return bytes(pdf.output())
+
+def format_date_french(date_str):
+    months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+    try:
+        import pandas as pd
+        dt = pd.to_datetime(date_str)
+        return f"{dt.day} {months[dt.month - 1]} {dt.year}"
+    except:
+        return date_str
+
+def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
+    pdf = FPDF(orientation="P")
+    pdf.add_page()
+    
+    # Zen Weekey Header
+    pdf.set_font("helvetica", "B", 12)
+    pdf.cell(0, 6, "ZEN WEEKEY", new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.set_font("helvetica", "", 10)
+    pdf.cell(0, 6, "10 RUE Rene Lacoste", new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.cell(0, 6, "44430 SAINT LYPHARD", new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.ln(10)
+    
+    # Title
+    pdf.set_font("helvetica", "B", 14)
+    pdf.cell(0, 10, f"Fiche Comptable - {sanitize(month_str)}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(5)
+    
+    # Information
+    pdf.set_font("helvetica", "B", 11)
+    pdf.cell(0, 6, f"Fille : {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Total Kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Total Heures travail : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(5)
+    
+    # Table Header
+    pdf.set_font("helvetica", "B", 10)
+    col_widths = [45, 30, 65, 40]
+    headers = ["Date", "Kilometres", "Statut", "Heures"]
+    
+    for i, h in enumerate(headers):
+        pdf.cell(col_widths[i], 8, h, border=1, align="C")
+    pdf.ln(8)
+    
+    # Table Body
+    pdf.set_font("helvetica", "", 10)
+    # Sort by date optionally
+    try:
+        df = df.sort_values(by='Date')
+    except:
+        pass
+        
+    for _, row in df.iterrows():
+        pdf.cell(col_widths[0], 8, sanitize(format_date_french(row.get('Date', ''))), border=1, align="C")
+        pdf.cell(col_widths[1], 8, f"{row.get('Total KM', 0):.2f}", border=1, align="R")
+        pdf.cell(col_widths[2], 8, sanitize(row.get('Statut', '')), border=1, align="C")
+        pdf.cell(col_widths[3], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
+        pdf.ln(8)
+        
+    return bytes(pdf.output())
+
+def generate_accounting_zip(raw_df, month_str):
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for girl_name, group_df in raw_df.groupby('Fille'):
+            total_km = group_df['Total KM'].sum()
+            total_hours = group_df['Heures'].sum()
+            
+            pdf_bytes = generate_accounting_pdf(group_df, girl_name, month_str, total_km, total_hours)
+            
+            # File name
+            safe_name = "".join([c if c.isalnum() else "_" for c in sanitize(girl_name)])
+            filename = f"Fiche_Comptable_{safe_name}.pdf"
+            
+            zip_file.writestr(filename, pdf_bytes)
+            
+    return zip_buffer.getvalue()

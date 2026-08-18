@@ -75,6 +75,10 @@ def render_trips_tracking():
         filtered_df = filtered_df[filtered_df['Fille'] == selected_user]
     if selected_month != "Tous":
         filtered_df = filtered_df[filtered_df['DateObj'].dt.strftime('%Y-%m') == selected_month]
+        
+    # Capture accounting dataframe isolated from specific date/user filters
+    accounting_df = filtered_df.copy()
+    
     if selected_date:
         filtered_df = filtered_df[filtered_df['DateObj'].dt.date == selected_date]
         
@@ -117,17 +121,39 @@ def render_trips_tracking():
     st.subheader("Exporter en PDF")
     
     date_filter_str = str(selected_date) if selected_date else "Tous"
-    try:
-        pdf_bytes = pdf_export.generate_pdf(display_df, total_km, total_hours, selected_user, selected_month, date_filter_str)
-        st.download_button(
-            label="Télécharger le rapport PDF",
-            data=pdf_bytes,
-            file_name=f"rapport_conciergerie_{datetime.today().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf",
-            type="primary"
-        )
-    except Exception as e:
-        st.error(f"Impossible de générer le PDF : {str(e)}")
+    
+    col_dl1, col_dl2 = st.columns(2)
+    
+    with col_dl1:
+        st.markdown("**Récépissé Complet (selon les filtres actuels)**")
+        try:
+            pdf_bytes = pdf_export.generate_pdf(display_df, total_km, total_hours, selected_user, selected_month, date_filter_str)
+            st.download_button(
+                label="Télécharger le rapport PDF",
+                data=pdf_bytes,
+                file_name=f"rapport_conciergerie_{datetime.today().strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                type="primary"
+            )
+        except Exception as e:
+            st.error(f"Erreur PDF : {str(e)}")
+            
+    with col_dl2:
+        st.markdown("**Fiches Comptables (une par fille pour le mois)**")
+        if accounting_df.empty:
+            st.warning("Aucune donnée enregistrée.")
+        else:
+            try:
+                zip_bytes = pdf_export.generate_accounting_zip(accounting_df, selected_month)
+                st.download_button(
+                    label=f"📦 Télécharger ZIP ({len(accounting_df['Fille'].unique())} Fiches)",
+                    data=zip_bytes,
+                    file_name=f"Fiches_Comptables_{selected_month}.zip",
+                    mime="application/zip",
+                    type="secondary"
+                )
+            except Exception as e:
+                st.error(f"Erreur ZIP : {str(e)}")
 
 def render_user_management():
     st.header("Gestion des utilisateurs")
