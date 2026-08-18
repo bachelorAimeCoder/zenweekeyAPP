@@ -94,10 +94,22 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
     pdf.ln(5)
     
     # Information
+    try:
+        if "-" in month_str:
+            y, m = month_str.split("-")
+            import calendar
+            last_day = calendar.monthrange(int(y), int(m))[1]
+            periode_str = f"Du 01/{m} au {last_day}/{m}"
+        else:
+            periode_str = month_str
+    except:
+        periode_str = month_str
+
     pdf.set_font("helvetica", "B", 11)
     pdf.cell(0, 6, f"Salariee : {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Total Kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Total Heures travail : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Periode : {periode_str}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Total des heures : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Nombre de kilometres : {total_km:.2f} km", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
     
     # Table Header
