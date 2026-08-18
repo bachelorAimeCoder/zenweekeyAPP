@@ -14,6 +14,7 @@ st.markdown("""
             border-bottom: 2px solid #1F1F1F;
         }
         /* Fond jaune clair pour toutes les cases de saisie (texte, date, select) */
+        div[data-baseweb="select"],
         div[data-baseweb="select"] > div,
         div[data-baseweb="base-input"],
         div[data-baseweb="input"] {
