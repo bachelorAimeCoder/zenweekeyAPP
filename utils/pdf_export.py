@@ -52,4 +52,4 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
         pdf.cell(col_widths[6], 8, route, border=1)
         pdf.ln(8)
         
-    return bytearray(pdf.output())
+    return bytes(pdf.output())
