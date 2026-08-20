@@ -153,7 +153,7 @@ def render_trips_tracking():
             st.error(f"Erreur PDF : {str(e)}")
             
     with col_dl2:
-        st.markdown("**Fiches Comptables (une par fille pour le mois)**")
+        st.markdown("**Fiches Comptables (une fiche / salarié / mois)**")
         if accounting_df.empty:
             st.warning("Aucune donnée enregistrée.")
         else:
