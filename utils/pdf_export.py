@@ -53,9 +53,9 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
     
     # Table Header
     pdf.ln(5)
-    pdf.set_font("helvetica", "B", 10)
-    col_widths = [25, 22, 30, 32, 16, 150]
-    headers = ["Date", "Kilometres", "Salariee", "Statut", "Heures", "Itineraire"]
+    pdf.set_font("helvetica", "B", 9)
+    col_widths = [30, 15, 28, 30, 15, 15, 137]
+    headers = ["Date", "KM", "Salarie(e)", "Statut", "Heures", "Etapes", "Itineraire"]
     
     for i, h in enumerate(headers):
         pdf.cell(col_widths[i], 8, h, border=1, align="C")
