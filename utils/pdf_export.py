@@ -36,11 +36,14 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
     pdf.cell(0, 10, "Recapitulatif des Trajets - Conciergerie", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
     
-    # Parametres
-    pdf.set_font("helvetica", "", 10)
-    pdf.cell(0, 6, f"Filtre Fille : {sanitize(user_filter)}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Filtre Mois : {sanitize(month_filter)}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Filtre Jour : {sanitize(date_filter)}", new_x="LMARGIN", new_y="NEXT")
+    # Filter Text
+    pdf.set_font("helvetica", "I", 10)
+    user_txt = f"Salarie(e) : {sanitize(user_filter)}" if user_filter else "Salarie(e) : Tous"
+    month_txt = f"Mois : {sanitize(month_filter)}" if month_filter else "Mois : Tous"
+    date_txt = f"Jour specifique : {sanitize(date_filter)}" if date_filter else ""
+    pdf.cell(0, 6, user_txt, new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, month_txt, new_x="LMARGIN", new_y="NEXT")
+    if date_txt: pdf.cell(0, 6, date_txt, new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     
     pdf.set_font("helvetica", "B", 11)
@@ -49,9 +52,10 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
     pdf.ln(5)
     
     # Table Header
-    pdf.set_font("helvetica", "B", 9)
-    col_widths = [30, 15, 25, 30, 15, 15, 140]
-    headers = ["Date", "KM", "Fille", "Statut", "Heures", "Etapes", "Itineraire"]
+    pdf.ln(5)
+    pdf.set_font("helvetica", "B", 10)
+    col_widths = [25, 22, 30, 32, 16, 150]
+    headers = ["Date", "Kilometres", "Salariee", "Statut", "Heures", "Itineraire"]
     
     for i, h in enumerate(headers):
         pdf.cell(col_widths[i], 8, h, border=1, align="C")
