@@ -238,9 +238,14 @@ def render_address_management():
         # Option pour supprimer
         del_col1, del_col2 = st.columns([1, 2])
         with del_col1:
-            addr_to_delete = st.selectbox("Adresse à supprimer (par ID)", [""] + list(df_addr['ID']))
+            options = [""] + df_addr.to_dict('records')
+            addr_to_delete = st.selectbox(
+                "Adresse à supprimer (par référence)", 
+                options,
+                format_func=lambda x: x['Référence'] if isinstance(x, dict) else str(x)
+            )
             if st.button("Supprimer l'adresse"):
                 if addr_to_delete:
-                    database.delete_address(addr_to_delete)
+                    database.delete_address(addr_to_delete['ID'])
                     st.success("Adresse supprimée.")
                     st.rerun()
