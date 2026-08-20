@@ -32,7 +32,7 @@ def render_admin_dashboard():
                     st.markdown(alert)
     # ==================================
 
-    tabs = st.tabs(["Suivi des Trajets", "Gestion des Utilisateurs", "Gestion des Adresses"])
+    tabs = st.tabs(["Suivi des salariés", "Gestion des Utilisateurs", "Gestion des Adresses"])
     
     with tabs[0]:
         render_trips_tracking()
@@ -44,7 +44,7 @@ def render_admin_dashboard():
         render_address_management()
 
 def render_trips_tracking():
-    st.header("Suivi des trajets")
+    st.header("Suivi des salariés")
     
     trips = database.get_all_trips()
     if not trips:
