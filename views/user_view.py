@@ -89,6 +89,8 @@ def render_user_dashboard():
         steps = []
         
         st.subheader("Itinéraire")
+        st.info("🚗 **Note:** Pour tenir compte des temps de stationnement et d'accès, un forfait automatique de **300 mètres (0.3 km) est ajouté au total pour chaque étape** renseignée.")
+        
         for i in range(st.session_state.trip_steps):
             label = "Départ" if i == 0 else f"Étape {i}"
             step_selection = st.selectbox(
@@ -117,6 +119,9 @@ def render_user_dashboard():
                     
                     try:
                         total_km_raw = gmaps.calculate_total_trip_distance(full_addresses)
+                        
+                        # Bonus stationnement / accès : 300m par étape
+                        total_km_raw += len(steps) * 0.3
                         
                         from decimal import Decimal, ROUND_HALF_UP
                         try:
