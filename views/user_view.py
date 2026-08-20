@@ -82,17 +82,20 @@ def render_user_dashboard():
         )
         st.markdown("<p style='color: #e06666; font-size: 0.85em; margin-top: -10px; margin-bottom: 20px;'><i>* Pour rappel, une pause de 20 minutes est obligatoire pour six heures de travail consécutives.</i></p>", unsafe_allow_html=True)
         
-        # Initialize steps in session state
-        if "trip_steps" not in st.session_state:
-            st.session_state.trip_steps = 1
-        
-        steps = []
-        
         st.subheader("Itinéraire")
         st.info("🚗 **Note:** Pour tenir compte des temps de stationnement et d'accès, un forfait automatique de **300 mètres (0.3 km) est ajouté au total pour chaque étape** renseignée.")
         
-        for i in range(st.session_state.trip_steps):
-            label = "Départ" if i == 0 else f"Étape {i}"
+        # Dynamically determine the number of step fields to show
+        # Streamlit saves selectbox values in st.session_state based on their keys
+        num_fields = 1
+        for i in range(25):
+            key = f"step_{i}"
+            if key in st.session_state and st.session_state[key] is not None:
+                num_fields = i + 2
+                
+        steps = []
+        for i in range(num_fields):
+            label = f"Étape {i+1}"
             step_selection = st.selectbox(
                 label, 
                 addr_options, 
@@ -100,18 +103,13 @@ def render_user_dashboard():
                 index=None, 
                 placeholder="Sélectionnez une adresse..."
             )
-            steps.append(step_selection)
-            
-        if st.button("Ajouter une étape"):
-            st.session_state.trip_steps += 1
-            st.rerun()
+            if step_selection is not None:
+                steps.append(step_selection)
             
         st.markdown("---")
         if st.button("Enregistrer la journée", type="primary"):
-            if None in steps:
-                st.warning("Erreur : Certaines étapes sont vides. Veuillez sélectionner une adresse pour chaque étape.")
-            elif len(steps) < 2:
-                st.warning("Veuillez saisir au moins un point de départ et une destination.")
+            if len(steps) < 2:
+                st.warning("Veuillez saisir au moins deux étapes (un point de départ et une destination).")
             else:
                 with st.spinner("Calcul des distances..."):
                     # Préparer la liste des adresses textuelles pour Google Maps
@@ -135,8 +133,11 @@ def render_user_dashboard():
                         
                         st.success(f"Journée enregistrée avec succès ! Kilométrage total calculé : {total_km:.1f} km")
                         
-                        # Reset
-                        st.session_state.trip_steps = 1
+                        # Clean up dynamic keys
+                        for key in list(st.session_state.keys()):
+                            if key.startswith("step_"):
+                                del st.session_state[key]
+                                
                         import time
                         time.sleep(2)
                         st.rerun()
