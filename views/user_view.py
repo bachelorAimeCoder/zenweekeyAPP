@@ -67,20 +67,44 @@ def render_user_dashboard():
     day_status = st.selectbox("Statut de la journée", status_options)
 
     if day_status == "Travail":
+        import datetime
+        st.markdown("**Horaires de travail**")
+        col_t1, col_t2 = st.columns(2)
+        start_time_1 = col_t1.time_input("Heure de début", value=datetime.time(8, 0))
+        end_time_1 = col_t2.time_input("Heure de fin", value=datetime.time(12, 0))
+        
+        has_break = st.checkbox("J'ai pris une pause (reprise d'activité)")
+        
+        start_time_2 = None
+        end_time_2 = None
+        if has_break:
+            col_t3, col_t4 = st.columns(2)
+            start_time_2 = col_t3.time_input("Heure de reprise", value=datetime.time(13, 0))
+            end_time_2 = col_t4.time_input("Heure de fin de journée", value=datetime.time(17, 0))
+
+        def calc_hours(start_t, end_t):
+            import datetime
+            if not start_t or not end_t: return 0.0
+            dt1 = datetime.datetime.combine(datetime.date.today(), start_t)
+            dt2 = datetime.datetime.combine(datetime.date.today(), end_t)
+            if dt2 < dt1:
+                dt2 += datetime.timedelta(days=1)
+            diff = dt2 - dt1
+            return diff.total_seconds() / 3600.0
+
+        hours_worked = calc_hours(start_time_1, end_time_1)
+        if has_break:
+            hours_worked += calc_hours(start_time_2, end_time_2)
+            
         def format_hours_str(val):
             h = int(val)
             m = int(round((val - h) * 60))
             if m == 0: return f"{h}h"
             return f"{h}h{m:02d}"
-            
-        hours_options = [i / 12.0 for i in range(0, 24 * 12 + 1)]
-        hours_worked = st.selectbox(
-            "Nombre d'heures travaillées", 
-            options=hours_options, 
-            format_func=format_hours_str, 
-            index=0
-        )
-        st.markdown("<p style='color: #e06666; font-size: 0.85em; margin-top: -10px; margin-bottom: 20px;'><i>* Pour rappel, une pause de 20 minutes est obligatoire pour six heures de travail consécutives.</i></p>", unsafe_allow_html=True)
+
+        st.info(f"⏳ **Temps comptabilisé :** {format_hours_str(hours_worked)}")
+        
+        st.markdown("<p style='color: #a0a0a0; font-size: 0.85em; margin-top: -10px; margin-bottom: 20px;'><i>* Pour rappel, une pause de 20 minutes est obligatoire pour six heures consécutives.</i></p>", unsafe_allow_html=True)
         
         st.subheader("Itinéraire")
         st.info("🚗 **Note:** Pour tenir compte des temps de stationnement et d'accès, un forfait automatique de **300 mètres (0.3 km) est ajouté au total pour chaque étape** renseignée.")
