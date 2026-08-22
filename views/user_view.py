@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime
+import datetime
 import database
 from utils import gmaps
 
@@ -16,13 +16,13 @@ def render_user_dashboard():
     addr_mapping = {f"{a['reference']} - {a['address']} ({a['city']})": a for a in addresses}
 
     # Calcul des jours manquants pour le mois en cours (jusqu'à la veille)
-    today = datetime.today().date()
+    today = datetime.datetime.today().date()
     recorded_dates = database.get_recorded_dates(st.session_state.user['id'])
     
     missing_days = []
-    from datetime import timedelta, date
+    
     for i in range(1, today.day):
-        d = date(today.year, today.month, i)
+        d = datetime.date(today.year, today.month, i)
         if str(d) not in recorded_dates:
             missing_days.append(f"{i:02d}/{today.month:02d}")
             
@@ -67,7 +67,6 @@ def render_user_dashboard():
     day_status = st.selectbox("Statut de la journée", status_options)
 
     if day_status == "Travail":
-        import datetime
         st.markdown("**Horaires de travail**")
         col_t1, col_t2 = st.columns(2)
         start_time_1 = col_t1.time_input("Heure de début", value=datetime.time(8, 0))
@@ -83,7 +82,6 @@ def render_user_dashboard():
             end_time_2 = col_t4.time_input("Heure de fin de journée", value=datetime.time(17, 0))
 
         def calc_hours(start_t, end_t):
-            import datetime
             if not start_t or not end_t: return 0.0
             dt1 = datetime.datetime.combine(datetime.date.today(), start_t)
             dt2 = datetime.datetime.combine(datetime.date.today(), end_t)
