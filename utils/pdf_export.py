@@ -70,7 +70,7 @@ def generate_pdf(df, total_km, total_hours, user_filter, month_filter, date_filt
             
         pdf.cell(col_widths[0], 8, sanitize(row.get('Date', '')), border=1)
         pdf.cell(col_widths[1], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
-        pdf.cell(col_widths[2], 8, sanitize(row.get('Fille', ''))[:15], border=1)
+        pdf.cell(col_widths[2], 8, sanitize(row.get('Salarié', ''))[:15], border=1)
         pdf.cell(col_widths[3], 8, sanitize(row.get('Statut', ''))[:15], border=1)
         pdf.cell(col_widths[4], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
         pdf.cell(col_widths[5], 8, str(row.get('Nb Étapes', 0)), border=1, align="C")
@@ -88,7 +88,7 @@ def format_date_french(date_str):
     except:
         return date_str
 
-def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
+def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours):
     pdf = FPDF(orientation="P")
     pdf.add_page()
     
@@ -102,7 +102,7 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
     
     # Title
     pdf.set_font("helvetica", "B", 14)
-    pdf.cell(0, 10, f"Fiche Comptable - {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 10, f"Fiche Comptable - {sanitize(employee_name)}", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
     
     # Information
@@ -123,7 +123,7 @@ def generate_accounting_pdf(df, girl_name, month_str, total_km, total_hours):
     abs_count = len(df[df['Statut'] == "Absence sans justificatif"]) if 'Statut' in df.columns else 0
 
     pdf.set_font("helvetica", "B", 11)
-    pdf.cell(0, 6, f"Salariee : {sanitize(girl_name)}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Salarie(e) : {sanitize(employee_name)}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Periode : {periode_str}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Total des heures : {format_hours_str(total_hours)}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Nombre de kilometres : {format_km(total_km)} km", new_x="LMARGIN", new_y="NEXT")
@@ -166,14 +166,14 @@ def generate_accounting_zip(raw_df, month_str):
     zip_buffer = io.BytesIO()
     
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for girl_name, group_df in raw_df.groupby('Fille'):
+        for employee_name, group_df in raw_df.groupby('Salarié'):
             total_km = group_df['Total KM'].sum()
             total_hours = group_df['Heures'].sum()
             
-            pdf_bytes = generate_accounting_pdf(group_df, girl_name, month_str, total_km, total_hours)
+            pdf_bytes = generate_accounting_pdf(group_df, employee_name, month_str, total_km, total_hours)
             
             # File name
-            safe_name = "".join([c if c.isalnum() else "_" for c in sanitize(girl_name)])
+            safe_name = "".join([c if c.isalnum() else "_" for c in sanitize(employee_name)])
             filename = f"Fiche_Comptable_{safe_name}.pdf"
             
             zip_file.writestr(filename, pdf_bytes)

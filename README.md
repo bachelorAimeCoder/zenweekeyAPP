@@ -1,6 +1,6 @@
 # Application de Conciergerie
 
-Une application web complète pour une conciergerie, permettant de gérer les trajets des filles, utilisant Streamlit, SQLite, et l'API Google Maps.
+Une application web complète pour une conciergerie, permettant de gérer les trajets des salarié(e)s, utilisant Streamlit, SQLite, et l'API Google Maps.
 
 ## Installation et Utilisation
 
@@ -27,4 +27,4 @@ Une application web complète pour une conciergerie, permettant de gérer les tr
      - **Nom d'utilisateur :** admin
      - **Mot de passe :** admin123
 
-L'administrateur peut ensuite se connecter pour créer les comptes des "Filles" (rôle "User").
+L'administrateur peut ensuite se connecter pour créer les comptes des "Salariés" (rôle "User").

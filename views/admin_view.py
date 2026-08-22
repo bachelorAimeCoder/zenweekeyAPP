@@ -51,9 +51,9 @@ def render_trips_tracking():
         st.info("Aucun trajet enregistré pour le moment.")
         return
         
-    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Fille', 'Nom', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures'])
+    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Salarié', 'Nom', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures'])
     df['Nom_Famille'] = df['Nom'].fillna('')
-    df['Fille_Complet'] = df.apply(lambda r: f"{r['Fille']} {r['Nom_Famille']}".strip(), axis=1)
+    df['Salarié_Complet'] = df.apply(lambda r: f"{r['Salarié']} {r['Nom_Famille']}".strip(), axis=1)
     
     # Convert 'Date' column to datetime where possible for filtering
     df['DateObj'] = pd.to_datetime(df['Date'], errors='coerce')
@@ -61,8 +61,8 @@ def render_trips_tracking():
     col1, col2, col3 = st.columns(3)
     with col1:
         # Get unique users
-        users = ["Tous"] + list(df['Fille'].unique())
-        selected_user = st.selectbox("Filtrer par fille", users)
+        users = ["Tous"] + list(df['Salarié'].unique())
+        selected_user = st.selectbox("Filtrer par salarié", users)
     
     with col2:
         # Extract unique months (YYYY-MM)
@@ -75,19 +75,19 @@ def render_trips_tracking():
     # Apply filters
     filtered_df = df.copy()
     if selected_user != "Tous":
-        filtered_df = filtered_df[filtered_df['Fille'] == selected_user]
+        filtered_df = filtered_df[filtered_df['Salarié'] == selected_user]
     if selected_month != "Tous":
         filtered_df = filtered_df[filtered_df['DateObj'].dt.strftime('%Y-%m') == selected_month]
         
     # Capture accounting dataframe isolated from specific date/user filters
     accounting_df = filtered_df.copy()
-    accounting_df['Fille'] = accounting_df['Fille_Complet']
+    accounting_df['Salarié'] = accounting_df['Salarié_Complet']
     
     if selected_date:
         filtered_df = filtered_df[filtered_df['DateObj'].dt.date == selected_date]
         
     # Formatage de la date en français pour l'affichage
-    display_df = filtered_df[['Date', 'Total KM', 'Fille', 'Statut', 'Heures', 'Nb Étapes', 'Itinéraire']].copy()
+    display_df = filtered_df[['Date', 'Total KM', 'Salarié', 'Statut', 'Heures', 'Nb Étapes', 'Itinéraire']].copy()
     months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
     
     def format_date_french(date_str):
@@ -160,7 +160,7 @@ def render_trips_tracking():
             try:
                 zip_bytes = pdf_export.generate_accounting_zip(accounting_df, selected_month)
                 st.download_button(
-                    label=f"📦 Télécharger ZIP ({len(accounting_df['Fille'].unique())} Fiches)",
+                    label=f"📦 Télécharger ZIP ({len(accounting_df['Salarié'].unique())} Fiches)",
                     data=zip_bytes,
                     file_name=f"Fiches_Comptables_{selected_month}.zip",
                     mime="application/zip",
