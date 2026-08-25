@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from psycopg2 import pool
+
 def get_db_url():
     try:
         if "DATABASE_URL" in st.secrets:
@@ -16,16 +18,22 @@ def get_db_url():
         pass
     return os.getenv("DATABASE_URL")
 
-@contextmanager
-def get_db_connection():
+@st.cache_resource
+def get_connection_pool():
     url = get_db_url()
     if not url:
         raise ValueError("DATABASE_URL is not set.")
-    conn = psycopg2.connect(url, cursor_factory=psycopg2.extras.DictCursor)
+    # Initialize a thread-safe connection pool with max 20 connections
+    return psycopg2.pool.ThreadedConnectionPool(1, 20, url, cursor_factory=psycopg2.extras.DictCursor)
+
+@contextmanager
+def get_db_connection():
+    pool = get_connection_pool()
+    conn = pool.getconn()
     try:
         yield conn
     finally:
-        conn.close()
+        pool.putconn(conn)
 
 def init_db():
     with get_db_connection() as conn:
