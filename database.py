@@ -193,6 +193,8 @@ def update_user_password(user_id, password_hash):
 def delete_user(user_id):
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM trip_steps WHERE trip_id IN (SELECT id FROM trips WHERE user_id = %s)", (user_id,))
+            cursor.execute("DELETE FROM trips WHERE user_id = %s", (user_id,))
             cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
             conn.commit()
 
