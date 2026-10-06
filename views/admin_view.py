@@ -201,8 +201,25 @@ def render_user_management():
         ln = user['last_name'] if user['last_name'] else ''
         full_name = f"{user['username']} {ln}".strip()
         col1.write(f"**{full_name}** ({user['role']})")
+        
+        with col2.popover("Modifier"):
+            with st.form(f"edit_user_{user['id']}"):
+                edit_username = st.text_input("Prénom", value=user['username'])
+                edit_last_name = st.text_input("Nom", value=ln)
+                edit_password = st.text_input("Nouveau mot de passe (vide si inchangé)", type="password")
+                if st.form_submit_button("Enregistrer", type="primary"):
+                    pw_hash = auth.hash_password(edit_password) if edit_password else None
+                    if database.update_user(user['id'], edit_username, edit_last_name, pw_hash):
+                        # Mettre à jour la session si c'est l'utilisateur actuel
+                        if user['username'] == st.session_state.user['username']:
+                            st.session_state.user['username'] = edit_username
+                        st.success("Utilisateur modifié.")
+                        st.rerun()
+                    else:
+                        st.error("Ce prénom est déjà utilisé.")
+                        
         if user['username'] != st.session_state.user['username']: # Ne pas se supprimer soi-même
-            if col2.button("Supprimer", key=f"del_user_{user['id']}"):
+            if col3.button("Supprimer", key=f"del_user_{user['id']}"):
                 database.delete_user(user['id'])
                 st.success("Utilisateur supprimé.")
                 st.rerun()

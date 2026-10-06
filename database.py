@@ -184,11 +184,18 @@ def create_user(username, password_hash, role, last_name=""):
     except psycopg2.IntegrityError:
         return False
 
-def update_user_password(user_id, password_hash):
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (password_hash, user_id))
-            conn.commit()
+def update_user(user_id, username, last_name, password_hash=None):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                if password_hash:
+                    cursor.execute("UPDATE users SET username = %s, last_name = %s, password_hash = %s WHERE id = %s", (username, last_name, password_hash, user_id))
+                else:
+                    cursor.execute("UPDATE users SET username = %s, last_name = %s WHERE id = %s", (username, last_name, user_id))
+                conn.commit()
+                return True
+    except psycopg2.IntegrityError:
+        return False
 
 def delete_user(user_id):
     with get_db_connection() as conn:
