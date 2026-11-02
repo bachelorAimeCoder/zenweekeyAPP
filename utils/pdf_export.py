@@ -1,3 +1,4 @@
+import re
 import io
 import zipfile
 from fpdf import FPDF
@@ -99,6 +100,60 @@ def format_accounting_status(status_val):
         return "Absence"
     return s
 
+def parse_time_to_minutes(time_str):
+    m = re.match(r'(\d{1,2})[h:](\d{2})', time_str.strip())
+    if m:
+        return int(m.group(1)) * 60 + int(m.group(2))
+    return None
+
+def minutes_to_time_str(minutes):
+    h = (minutes // 60) % 24
+    m = minutes % 60
+    return f"{h:02d}h{m:02d}"
+
+def adjust_breaks_for_detail(detail_str):
+    if not detail_str or not isinstance(detail_str, str):
+        return detail_str
+    
+    raw_slots = [s.strip() for s in detail_str.split('/') if s.strip()]
+    parsed_slots = []
+    for s in raw_slots:
+        parts = s.split('-')
+        if len(parts) == 2:
+            t1 = parse_time_to_minutes(parts[0])
+            t2 = parse_time_to_minutes(parts[1])
+            if t1 is not None and t2 is not None:
+                if t2 < t1:
+                    t2 += 24 * 60
+                parsed_slots.append((t1, t2))
+            else:
+                return detail_str
+        else:
+            return detail_str
+            
+    if not parsed_slots:
+        return detail_str
+        
+    shift_minutes = 0
+    new_slots = []
+    
+    for start, end in parsed_slots:
+        curr_start = start + shift_minutes
+        curr_end = end + shift_minutes
+        duration = curr_end - curr_start
+        
+        while duration > 360:
+            slot_end = curr_start + 360
+            new_slots.append((curr_start, slot_end))
+            shift_minutes += 20
+            curr_start = slot_end + 20
+            duration = duration - 360
+            curr_end = curr_start + duration
+            
+        new_slots.append((curr_start, curr_end))
+        
+    return " / ".join(f"{minutes_to_time_str(s)}-{minutes_to_time_str(e)}" for s, e in new_slots)
+
 def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours):
     pdf = FPDF(orientation="P")
     pdf.add_page()
@@ -148,8 +203,8 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
     pdf.ln(5)
     
     # Table Header (Dates -> Description -> Detail -> Heures -> Kilometres)
-    pdf.set_font("helvetica", "B", 9.5)
-    col_widths = [38, 32, 55, 30, 30]
+    pdf.set_font("helvetica", "B", 9)
+    col_widths = [35, 28, 66, 28, 28]
     headers = ["Dates", "Description", "Detail", "Heures", "Kilometres"]
     
     start_x = (pdf.w - sum(col_widths)) / 2
@@ -175,10 +230,21 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
         elif not detail_val or str(detail_val) == 'nan':
             detail_val = ""
             
+        detail_display = adjust_breaks_for_detail(str(detail_val))
+
         pdf.set_x(start_x)
+        pdf.set_font("helvetica", "", 8.5)
         pdf.cell(col_widths[0], 8, sanitize(format_date_french(row.get('Date', ''))), border=1, align="C")
         pdf.cell(col_widths[1], 8, sanitize(format_accounting_status(row.get('Statut', ''))), border=1, align="C")
-        pdf.cell(col_widths[2], 8, sanitize(str(detail_val)), border=1, align="C")
+        
+        # Ajuster la police si le texte des créneaux est long
+        if len(detail_display) > 30:
+            pdf.set_font("helvetica", "", 7.5)
+        else:
+            pdf.set_font("helvetica", "", 8.5)
+        pdf.cell(col_widths[2], 8, sanitize(detail_display), border=1, align="C")
+        
+        pdf.set_font("helvetica", "", 8.5)
         pdf.cell(col_widths[3], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
         pdf.cell(col_widths[4], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
         pdf.ln(8)
