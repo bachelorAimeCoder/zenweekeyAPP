@@ -88,6 +88,17 @@ def format_date_french(date_str):
     except:
         return date_str
 
+def format_accounting_status(status_val):
+    if not status_val:
+        return ""
+    s = str(status_val).strip()
+    s_lower = s.lower()
+    if "cong" in s_lower:
+        return "Conge"
+    if "maladie" in s_lower or "absence" in s_lower:
+        return "Absence"
+    return s
+
 def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours):
     pdf = FPDF(orientation="P")
     pdf.add_page()
@@ -96,8 +107,8 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
     pdf.set_font("helvetica", "B", 12)
     pdf.cell(0, 6, "ZEN WEEKEY", new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.set_font("helvetica", "", 10)
-    pdf.cell(0, 6, "10 RUE Rene Lacoste", new_x="LMARGIN", new_y="NEXT", align="L")
-    pdf.cell(0, 6, "44430 SAINT LYPHARD", new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.cell(0, 6, sanitize("69 rue de la Maisonneuve"), new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.cell(0, 6, sanitize("44350 Guérande"), new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.ln(10)
     
     # Title
@@ -118,9 +129,9 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
         periode_str = month_str
 
     # Counts
-    cp_count = len(df[df['Statut'] == "Congé payé"]) if 'Statut' in df.columns else 0
-    mal_count = len(df[df['Statut'] == "Maladie avec justificatif"]) if 'Statut' in df.columns else 0
-    abs_count = len(df[df['Statut'] == "Absence sans justificatif"]) if 'Statut' in df.columns else 0
+    cp_count = len(df[df['Statut'].fillna('').str.contains("cong", case=False)]) if 'Statut' in df.columns else 0
+    mal_count = len(df[df['Statut'].fillna('').str.contains("maladie", case=False)]) if 'Statut' in df.columns else 0
+    abs_count = len(df[df['Statut'].fillna('').str.contains("sans justificatif", case=False)]) if 'Statut' in df.columns else 0
 
     pdf.set_font("helvetica", "B", 11)
     pdf.cell(0, 6, f"Salarie(e) : {sanitize(employee_name)}", new_x="LMARGIN", new_y="NEXT")
@@ -138,9 +149,11 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
     
     # Table Header (Dates -> Description -> Heures -> Kilometres)
     pdf.set_font("helvetica", "B", 10)
-    col_widths = [40, 75, 35, 30]
+    col_widths = [50, 45, 45, 40]
     headers = ["Dates", "Description", "Heures", "Kilometres"]
     
+    start_x = (pdf.w - sum(col_widths)) / 2
+    pdf.set_x(start_x)
     for i, h in enumerate(headers):
         pdf.cell(col_widths[i], 8, h, border=1, align="C")
     pdf.ln(8)
@@ -154,8 +167,9 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
         pass
         
     for _, row in df.iterrows():
+        pdf.set_x(start_x)
         pdf.cell(col_widths[0], 8, sanitize(format_date_french(row.get('Date', ''))), border=1, align="C")
-        pdf.cell(col_widths[1], 8, sanitize(row.get('Statut', '')), border=1, align="C")
+        pdf.cell(col_widths[1], 8, sanitize(format_accounting_status(row.get('Statut', ''))), border=1, align="C")
         pdf.cell(col_widths[2], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
         pdf.cell(col_widths[3], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
         pdf.ln(8)
