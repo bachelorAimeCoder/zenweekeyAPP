@@ -141,16 +141,16 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
     pdf.ln(2)
     
     # Recapitulatif congés/absences
+    total_abs_count = mal_count + abs_count
     pdf.set_font("helvetica", "", 11)
     pdf.cell(0, 6, f"Jours en conges payes : {cp_count}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Jours d'absences (maladie) : {mal_count}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"Jours d'absences injustifiees : {abs_count}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Jours d'absence : {total_abs_count}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
     
-    # Table Header (Dates -> Description -> Heures -> Kilometres)
-    pdf.set_font("helvetica", "B", 10)
-    col_widths = [50, 45, 45, 40]
-    headers = ["Dates", "Description", "Heures", "Kilometres"]
+    # Table Header (Dates -> Description -> Detail -> Heures -> Kilometres)
+    pdf.set_font("helvetica", "B", 9.5)
+    col_widths = [38, 32, 55, 30, 30]
+    headers = ["Dates", "Description", "Detail", "Heures", "Kilometres"]
     
     start_x = (pdf.w - sum(col_widths)) / 2
     pdf.set_x(start_x)
@@ -159,7 +159,7 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
     pdf.ln(8)
     
     # Table Body
-    pdf.set_font("helvetica", "", 10)
+    pdf.set_font("helvetica", "", 8.5)
     # Sort by date optionally
     try:
         df = df.sort_values(by='Date')
@@ -167,11 +167,20 @@ def generate_accounting_pdf(df, employee_name, month_str, total_km, total_hours)
         pass
         
     for _, row in df.iterrows():
+        detail_val = row.get('Detail', '')
+        if not detail_val or str(detail_val) == 'nan':
+            detail_val = row.get('hours_detail', '')
+        if (not detail_val or str(detail_val) == 'nan') and row.get('Statut') == 'Travail' and row.get('Heures', 0) > 0:
+            detail_val = format_hours_str(row.get('Heures', 0))
+        elif not detail_val or str(detail_val) == 'nan':
+            detail_val = ""
+            
         pdf.set_x(start_x)
         pdf.cell(col_widths[0], 8, sanitize(format_date_french(row.get('Date', ''))), border=1, align="C")
         pdf.cell(col_widths[1], 8, sanitize(format_accounting_status(row.get('Statut', ''))), border=1, align="C")
-        pdf.cell(col_widths[2], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
-        pdf.cell(col_widths[3], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
+        pdf.cell(col_widths[2], 8, sanitize(str(detail_val)), border=1, align="C")
+        pdf.cell(col_widths[3], 8, format_hours_str(row.get('Heures', 0)), border=1, align="R")
+        pdf.cell(col_widths[4], 8, format_km(row.get('Total KM', 0)), border=1, align="R")
         pdf.ln(8)
         
     return bytes(pdf.output())

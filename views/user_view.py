@@ -149,9 +149,18 @@ def render_user_dashboard():
                         except:
                             total_km = float(total_km_raw)
                         
+                        # Formater le détail des horaires travaillés
+                        def format_time_slot(t1, t2):
+                            return f"{t1.strftime('%Hh%M')}-{t2.strftime('%Hh%M')}"
+                            
+                        if has_break and start_time_2 and end_time_2:
+                            hours_detail = f"{format_time_slot(start_time_1, end_time_1)} / {format_time_slot(start_time_2, end_time_2)}"
+                        else:
+                            hours_detail = f"{format_time_slot(start_time_1, end_time_1)}"
+
                         # Sauvegarder en BDD
                         step_ids = [addr_mapping[s]['id'] for s in steps]
-                        database.save_trip(st.session_state.user['id'], date_str, total_km, step_ids, status=day_status, hours=hours_worked)
+                        database.save_trip(st.session_state.user['id'], date_str, total_km, step_ids, status=day_status, hours=hours_worked, hours_detail=hours_detail)
                         
                         st.success(f"Journée enregistrée avec succès ! Kilométrage total calculé : {total_km:.1f} km")
                         

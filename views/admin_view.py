@@ -51,7 +51,7 @@ def render_trips_tracking():
         st.info("Aucun trajet enregistré pour le moment.")
         return
         
-    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Salarié', 'Nom', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures'])
+    df = pd.DataFrame(trips, columns=['ID', 'Date', 'Total KM', 'Salarié', 'Nom', 'Nb Étapes', 'Itinéraire', 'Statut', 'Heures', 'Detail'])
     df['Nom_Famille'] = df['Nom'].fillna('')
     df['Salarié_Complet'] = df.apply(lambda r: f"{r['Salarié']} {r['Nom_Famille']}".strip(), axis=1)
     

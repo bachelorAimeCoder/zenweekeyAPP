@@ -68,9 +68,11 @@ def init_db():
                     total_km REAL DEFAULT 0.0,
                     status TEXT DEFAULT 'Travail',
                     hours REAL DEFAULT 0.0,
+                    hours_detail TEXT DEFAULT '',
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
+            cursor.execute("ALTER TABLE trips ADD COLUMN IF NOT EXISTS hours_detail TEXT DEFAULT '';")
 
             # Table Trip Steps
             cursor.execute('''
@@ -231,10 +233,10 @@ def delete_address(address_id):
             conn.commit()
 
 # --- Fonctions Trajets ---
-def save_trip(user_id, date, total_km, steps, status='Travail', hours=0.0):
+def save_trip(user_id, date, total_km, steps, status='Travail', hours=0.0, hours_detail=''):
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("INSERT INTO trips (user_id, date, total_km, status, hours) VALUES (%s, %s, %s, %s, %s) RETURNING id", (user_id, date, total_km, status, hours))
+            cursor.execute("INSERT INTO trips (user_id, date, total_km, status, hours, hours_detail) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id", (user_id, date, total_km, status, hours, hours_detail))
             trip_id = cursor.fetchone()[0]
             
             step_records = [(trip_id, order, address_id) for order, address_id in enumerate(steps)]
@@ -264,7 +266,8 @@ def get_all_trips():
                            ) a
                        ) as route_details,
                        t.status,
-                       t.hours
+                       t.hours,
+                       COALESCE(t.hours_detail, '') as hours_detail
                 FROM trips t 
                 JOIN users u ON t.user_id = u.id
                 ORDER BY t.date DESC
